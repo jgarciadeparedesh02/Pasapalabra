@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Test Sockets Pasapalabra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      th,
+      td {
+        border: 2px solid white;
+        border-right: 0px;
+        border-left: 0px;
+        padding: 10px 20px;
+      }
+    </style>
+  </head>
+  <body class="bg-blue-400 flex flex-col items-center">
+    <button
+      class="btn bg-red-500 text-white p-4 my-2 mx-auto rounded-md"
+      onclick="test(socket)"
+    >
+      Test
+    </button>
+
+    <div class="w-full flex flex-col items-center jusify-center">
+      <h1 class="text-3xl w-4/5 text-white font-bold mb-2">
+        Tabla de clasificación
+      </h1>
+      <table
+        id="resultsTable"
+        class="table-auto w-4/5 text-center bg-blue-500 text-white border-2 border-white rounded-md"
+      ></table>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      const socket = io({
+        auth: {
+          serverOffset: 0,
+        },
+        ackTimeout: 10000,
+        retries: 3,
+      });
+
+      function test(socket) {
+        socket.emit("new player finished", {
+          name: "Anonymous",
+          successes: 14,
+          mistakes: 2,
+          time: 152, //seconds
+          date: new Date(),
+        });
+      }
+
+      function loadResults() {
+        var table = document.getElementById("resultsTable");
+        fetch("http://localhost:3000/results").then((response) => {
+          response.json().then((results) => {
+            $("#resultsTable tr").remove();
+            var row = table.insertRow();
+            row.insertCell().innerText = "Name";
+            row.insertCell().innerText = "Successes";
+            row.insertCell().innerText = "Mistakes";
+            row.insertCell().innerText = "Time";
+            row.insertCell().innerText = "Position";
+
+            results.forEach((element, index) => {
+              var row = table.insertRow();
+
+              row.insertCell().innerText = element.name;
+              row.insertCell().innerText = element.successes;
+              row.insertCell().innerText = element.mistakes;
+              row.insertCell().innerText = element.time;
+              row.insertCell().innerText = index + 1;
+            });
+          });
+        });
+      }
+
+      loadResults();
+      socket.on("new player catched", (data) => {
+        loadResults();
+      });
+    </script>
+  </body>
+</html>
